@@ -8,19 +8,6 @@ const User = require('../models/User');
 const randomBytesAsync = promisify(crypto.randomBytes);
 
 /**
- * GET /login
- * Login page.
- */
-exports.getLogin = (req, res) => {
-  if (req.user) {
-    return res.redirect('/');
-  }
-  res.render('account/login', {
-    title: 'Login'
-  });
-};
-
-/**
  * POST /login
  * Sign in using email and password.
  */
@@ -32,20 +19,17 @@ exports.postLogin = (req, res, next) => {
   const errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
-    return res.redirect('/login');
+    return next(errors);
   }
 
   passport.authenticate('local', (err, user, info) => {
     if (err) { return next(err); }
     if (!user) {
-      req.flash('errors', info);
-      return res.redirect('/login');
+      return next(info);
     }
     req.logIn(user, (err) => {
       if (err) { return next(err); }
-      req.flash('success', { msg: 'Success! You are logged in.' });
-      res.redirect(req.session.returnTo || '/');
+      res.json({ msg: 'Success! You are logged in.' });
     });
   })(req, res, next);
 };
@@ -63,18 +47,6 @@ exports.logout = (req, res) => {
   });
 };
 
-/**
- * GET /signup
- * Signup page.
- */
-exports.getSignup = (req, res) => {
-  if (req.user) {
-    return res.redirect('/');
-  }
-  res.render('account/signup', {
-    title: 'Create Account'
-  });
-};
 
 /**
  * POST /signup
@@ -83,26 +55,26 @@ exports.getSignup = (req, res) => {
 exports.postSignup = (req, res, next) => {
   req.assert('email', 'Email is not valid').isEmail();
   req.assert('password', 'Password must be at least 4 characters long').len(4);
-  req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
   req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
 
   const errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
-    return res.redirect('/signup');
+    return next(errors);
   }
 
   const user = new User({
     email: req.body.email,
-    password: req.body.password
+    password: req.body.password,
+    fullName: req.body.fullName,
+    companyName: req.body.companyName
   });
 
   User.findOne({ email: req.body.email }, (err, existingUser) => {
     if (err) { return next(err); }
     if (existingUser) {
-      req.flash('errors', { msg: 'Account with that email address already exists.' });
-      return res.redirect('/signup');
+      const error = { msg: 'Account with that email address already exists.' };
+      return next(error);
     }
     user.save((err) => {
       if (err) { return next(err); }
@@ -110,21 +82,18 @@ exports.postSignup = (req, res, next) => {
         if (err) {
           return next(err);
         }
-        res.redirect('/');
+        res.json({
+          user: {
+            companyName: user.companyName,
+            email: user.email,
+            fullName: user.fullName
+          }
+        });
       });
     });
   });
 };
 
-/**
- * GET /account
- * Profile page.
- */
-exports.getAccount = (req, res) => {
-  res.render('account/profile', {
-    title: 'Account Management'
-  });
-};
 
 /**
  * POST /account/profile
@@ -201,61 +170,6 @@ exports.postDeleteAccount = (req, res, next) => {
   });
 };
 
-/**
- * GET /account/unlink/:provider
- * Unlink OAuth provider.
- */
-exports.getOauthUnlink = (req, res, next) => {
-  const { provider } = req.params;
-  User.findById(req.user.id, (err, user) => {
-    if (err) { return next(err); }
-    user[provider.toLowerCase()] = undefined;
-    const tokensWithoutProviderToUnlink = user.tokens.filter(token =>
-      token.kind !== provider.toLowerCase());
-    // Some auth providers do not provide an email address in the user profile.
-    // As a result, we need to verify that unlinking the provider is safe by ensuring
-    // that another login method exists.
-    if (
-      !(user.email && user.password)
-      && tokensWithoutProviderToUnlink.length === 0
-    ) {
-      req.flash('errors', {
-        msg: `The ${_.startCase(_.toLower(provider))} account cannot be unlinked without another form of login enabled.`
-          + ' Please link another account or add an email address and password.'
-      });
-      return res.redirect('/account');
-    }
-    user.tokens = tokensWithoutProviderToUnlink;
-    user.save((err) => {
-      if (err) { return next(err); }
-      req.flash('info', { msg: `${_.startCase(_.toLower(provider))} account has been unlinked.` });
-      res.redirect('/account');
-    });
-  });
-};
-
-/**
- * GET /reset/:token
- * Reset Password page.
- */
-exports.getReset = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return res.redirect('/');
-  }
-  User
-    .findOne({ passwordResetToken: req.params.token })
-    .where('passwordResetExpires').gt(Date.now())
-    .exec((err, user) => {
-      if (err) { return next(err); }
-      if (!user) {
-        req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
-        return res.redirect('/forgot');
-      }
-      res.render('account/reset', {
-        title: 'Password Reset'
-      });
-    });
-};
 
 /**
  * POST /reset/:token
@@ -339,19 +253,6 @@ exports.postReset = (req, res, next) => {
     .then(sendResetPasswordEmail)
     .then(() => { if (!res.finished) res.redirect('/'); })
     .catch(err => next(err));
-};
-
-/**
- * GET /forgot
- * Forgot Password page.
- */
-exports.getForgot = (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.redirect('/');
-  }
-  res.render('account/forgot', {
-    title: 'Forgot Password'
-  });
 };
 
 /**
