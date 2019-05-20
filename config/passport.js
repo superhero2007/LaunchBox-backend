@@ -1,6 +1,8 @@
 const passport = require('passport');
-const { Strategy: LocalStrategy } = require('passport-local');
-const _ = require('lodash');
+const Promise = require('bluebird');
+const LocalStrategy = require('passport-local').Strategy;
+const JWTstrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
 
 const User = require('../models/User');
 
@@ -33,25 +35,46 @@ passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, don
   });
 }));
 
-/**
- * Login Required middleware.
- */
-exports.isAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next();
+passport.use(new JWTstrategy({
+  secretOrKey: process.env.SESSION_SECRET,
+  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken()
+}, async (user, done) => {
+  try {
+    return done(null, user);
+  } catch (err) {
+    done(err, null);
   }
-  res.redirect('/login');
+}));
+
+
+const handleJWT = (req, res, next) => async (err, _user, info) => {
+  const logIn = Promise.promisify(req.logIn);
+  const apiError = new Error('Unauthorized');
+  apiError.status = 401;
+
+  console.log('authorize');
+
+  if (err || !_user) {
+    return next(apiError);
+  }
+
+  try {
+    await logIn(_user, { session: false });
+  } catch (e) {
+    return next(apiError);
+  }
+
+  try {
+    req.user = await User.findOne({ email: _user.email.toLowerCase() });
+  } catch (e) {
+    return next(apiError);
+  }
+
+  return next();
 };
 
-/**
- * Authorization Required middleware.
- */
-exports.isAuthorized = (req, res, next) => {
-  const provider = req.path.split('/').slice(-1)[0];
-  const token = req.user.tokens.find(token => token.kind === provider);
-  if (token) {
-    next();
-  } else {
-    res.redirect(`/auth/${provider}`);
-  }
-};
+exports.authorize = () => (req, res, next) =>
+  passport.authenticate(
+    'jwt', { session: false },
+    handleJWT(req, res, next),
+  )(req, res, next);
