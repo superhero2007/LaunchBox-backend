@@ -3,6 +3,7 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey('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');
 
 const sendConfirmationEmail = (user) => {
+  console.log(user.generateConfirmationUrl());
   const msg = {
     to: user.email,
     from: 'info@creativemarket.com',
