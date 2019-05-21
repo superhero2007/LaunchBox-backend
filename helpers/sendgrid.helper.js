@@ -1,6 +1,6 @@
 const sgMail = require('@sendgrid/mail');
 
-sgMail.setApiKey('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');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const sendConfirmationEmail = (user) => {
   console.log(user.generateConfirmationUrl());
