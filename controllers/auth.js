@@ -6,7 +6,7 @@ const passportConfig = require('../config/passport');
 const router = express.Router();
 
 const User = require('../models/User');
-const { sendConfirmationEmail } = require('../helpers/sendgrid.helper');
+const { sendResetPasswordEmail, sendConfirmationEmail } = require('../helpers/sendgrid.helper');
 
 const login = async (req, res, next) => {
   passport.authenticate('local', async (err, user, info) => {
@@ -114,34 +114,19 @@ const confirmation = (req, res) => {
 
 const resetPasswordRequest = (req, res) => {
   console.log('[reset_password_request]', req.body.email);
+  const newPassword = Math.random().toString(36).slice(-8);
+  console.log(newPassword);
   User.findOne({ email: req.body.email }).then((user) => {
-    if (user) {
-      res.json({});
-    } else {
-      res
+    if (!user) {
+      return res
         .status(400)
-        .json({ errors: { global: 'There is no user with such email' } });
+        .json({ errors: { global: 'This email does not exist' } });
     }
-  });
-};
-
-const resetPassword = (req, res) => {
-  const { password, token } = req.body.data;
-  console.log('[reset_password]', req.body.data);
-
-  jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
-    if (err) {
-      res.status(401).json({ errors: { global: 'Invalid token' } });
-    } else {
-      User.findOne({ _id: decoded._id }).then((user) => {
-        if (user) {
-          user.setPassword(password);
-          user.save().then(() => res.json({}));
-        } else {
-          res.status(404).json({ errors: { global: 'Invalid token' } });
-        }
-      });
-    }
+    user.password = newPassword;
+    user.save().then(() => {
+      sendResetPasswordEmail(user, newPassword);
+      return res.json({});
+    });
   });
 };
 
@@ -159,7 +144,6 @@ router.post('/register-confirmation', registerConfirmation);
 router.get('/confirmation/:token', confirmToken);
 router.post('/confirmation', confirmation);
 router.post('/reset_password_request', resetPasswordRequest);
-router.post('/reset_password', resetPassword);
 router.get('/user', passportConfig.authorize(), getUser);
 
 module.exports = router;

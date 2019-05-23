@@ -17,4 +17,21 @@ const sendConfirmationEmail = (user) => {
   sgMail.send(msg);
 };
 
-module.exports.sendConfirmationEmail = sendConfirmationEmail;
+const sendResetPasswordEmail = (user, newPassword) => {
+  const msg = {
+    to: user.email,
+    from: 'info@creativemarket.com',
+    from_name: 'Creative Market',
+    templateId: 'd-4e8d47a6637d4980b3d1fac56c06ebac',
+    dynamic_template_data: {
+      email: user.email,
+      password: newPassword
+    },
+  };
+  sgMail.send(msg);
+};
+
+module.exports = {
+  sendConfirmationEmail,
+  sendResetPasswordEmail
+};

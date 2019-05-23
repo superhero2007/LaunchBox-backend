@@ -48,7 +48,13 @@ userSchema.methods.isConfirmed = function isConfirmed() {
 };
 
 userSchema.methods.setPassword = function setPassword(password) {
-  this.password = bcrypt.hashSync(password, 10);
+  bcrypt.genSalt(10, (err, salt) => {
+    if (err) { return; }
+    bcrypt.hash(password, salt, (err, hash) => {
+      if (err) { return; }
+      this.password = hash;
+    });
+  });
 };
 
 userSchema.methods.setConfirmationToken = function setConfirmationToken() {
