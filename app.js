@@ -20,6 +20,7 @@ dotenv.config({ path: '.env' });
  * Controllers (route handlers).
  */
 const authController = require('./controllers/auth');
+const userController = require('./controllers/user');
 const inputController = require('./controllers/input');
 const presenceController = require('./controllers/presence');
 const logoController = require('./controllers/logo');
@@ -78,6 +79,7 @@ app.use(passport.session());
  * Primary app routes.
  */
 app.use('/api/auth', authController);
+app.use('/api/user', userController);
 app.use('/api/input', inputController);
 app.use('/api/presence', presenceController);
 app.use('/api/logo', logoController);

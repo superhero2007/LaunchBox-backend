@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   companyName: String,
   fullName: String,
   email: { type: String, unique: true },
+  photo: String,
   password: String,
   passwordResetToken: String,
   passwordResetExpires: Date,

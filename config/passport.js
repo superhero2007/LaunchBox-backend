@@ -47,7 +47,7 @@ passport.use(new JWTstrategy({
 }));
 
 
-const handleJWT = (req, res, next) => async (err, _user, info) => {
+const handleJWT = (req, res, next) => async (err, _user) => {
   const logIn = Promise.promisify(req.logIn);
   const apiError = new Error('Unauthorized');
   apiError.status = 401;
@@ -65,7 +65,7 @@ const handleJWT = (req, res, next) => async (err, _user, info) => {
   }
 
   try {
-    req.user = await User.findOne({ email: _user.email.toLowerCase() });
+    req.user = await User.findOne({ _id: _user._id });
   } catch (e) {
     return next(apiError);
   }
@@ -74,7 +74,5 @@ const handleJWT = (req, res, next) => async (err, _user, info) => {
 };
 
 exports.authorize = () => (req, res, next) =>
-  passport.authenticate(
-    'jwt', { session: false },
-    handleJWT(req, res, next),
-  )(req, res, next);
+  passport.authenticate('jwt', { session: false },
+    handleJWT(req, res, next))(req, res, next);

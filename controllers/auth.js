@@ -130,20 +130,11 @@ const resetPasswordRequest = (req, res) => {
   });
 };
 
-const getUser = (req, res, next) => {
-  if (req.user) {
-    res.json({ user: req.user });
-  } else {
-    res.status(404).json({ errors: { global: 'Invalid token' } });
-  }
-};
-
 router.post('/login', login);
 router.post('/register', register);
 router.post('/register-confirmation', registerConfirmation);
 router.get('/confirmation/:token', confirmToken);
 router.post('/confirmation', confirmation);
 router.post('/reset_password_request', resetPasswordRequest);
-router.get('/user', passportConfig.authorize(), getUser);
 
 module.exports = router;
