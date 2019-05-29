@@ -1,7 +1,6 @@
 const express = require('express');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
-const passportConfig = require('../config/passport');
 
 const router = express.Router();
 
@@ -112,21 +111,38 @@ const confirmation = (req, res) => {
   });
 };
 
+
 const resetPasswordRequest = (req, res) => {
   console.log('[reset_password_request]', req.body.email);
-  const newPassword = Math.random().toString(36).slice(-8);
-  console.log(newPassword);
   User.findOne({ email: req.body.email }).then((user) => {
     if (!user) {
       return res
         .status(400)
         .json({ errors: { global: 'This email does not exist' } });
     }
+    sendResetPasswordEmail(user);
+    return res.json({});
+  });
+};
+
+
+const resetPassword = (req, res) => {
+  const newPassword = req.body.password;
+  console.log(req.body);
+  const id = jwt.verify(req.body.token, process.env.SESSION_SECRET)._id;
+  User.findById(id).then(async (user) => {
+    if (!user) {
+      return res
+        .status(400)
+        .json({ errors: { global: 'This email does not exist' } });
+    }
     user.password = newPassword;
-    user.save().then(() => {
-      sendResetPasswordEmail(user, newPassword);
-      return res.json({});
-    });
+    try {
+      await user.save();
+    } catch (error) {
+      return res.status(400).json({ errors: error.errors });
+    }
+    return res.json({});
   });
 };
 
@@ -135,6 +151,7 @@ router.post('/register', register);
 router.post('/register-confirmation', registerConfirmation);
 router.get('/confirmation/:token', confirmToken);
 router.post('/confirmation', confirmation);
+router.post('/reset_password', resetPassword);
 router.post('/reset_password_request', resetPasswordRequest);
 
 module.exports = router;

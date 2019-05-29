@@ -6,8 +6,8 @@ const sendConfirmationEmail = (user) => {
   console.log(user.generateConfirmationUrl());
   const msg = {
     to: user.email,
-    from: 'info@creativemarket.com',
-    from_name: 'Creative Market',
+    from: 'support@brandguide.app',
+    from_name: 'BrandGuide',
     templateId: 'd-502c70f187434c7db66c9c1651a6759f',
     dynamic_template_data: {
       email: user.email,
@@ -17,15 +17,31 @@ const sendConfirmationEmail = (user) => {
   sgMail.send(msg);
 };
 
-const sendResetPasswordEmail = (user, newPassword) => {
+const sendResetPasswordEmail = (user) => {
+  console.log(user.generateResetPasswordLink());
   const msg = {
     to: user.email,
-    from: 'info@creativemarket.com',
-    from_name: 'Creative Market',
-    templateId: 'd-4e8d47a6637d4980b3d1fac56c06ebac',
+    from: 'support@brandguide.app',
+    from_name: 'BrandGuide',
+    templateId: 'd-01448366ab014cf09400c66f4f0158a4',
     dynamic_template_data: {
-      email: user.email,
-      password: newPassword
+      fullName: user.fullName,
+      verify_link: user.generateResetPasswordLink()
+    },
+  };
+  sgMail.send(msg);
+};
+
+const sendChangeEmail = (user) => {
+  console.log(user.generateEmailUrl());
+  const msg = {
+    to: user.email,
+    from: 'support@brandguide.app',
+    from_name: 'BrandGuide',
+    templateId: 'd-72f41c23fc8f49bf99f794e4b0261f23',
+    dynamic_template_data: {
+      fullName: user.fullName,
+      verify_link: user.generateEmailUrl()
     },
   };
   sgMail.send(msg);
@@ -33,5 +49,6 @@ const sendResetPasswordEmail = (user, newPassword) => {
 
 module.exports = {
   sendConfirmationEmail,
-  sendResetPasswordEmail
+  sendResetPasswordEmail,
+  sendChangeEmail
 };

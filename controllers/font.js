@@ -23,7 +23,7 @@ const createFont = async (req, res, next) => {
 
 const getFonts = async (req, res, next) => {
   try {
-    const fonts = await Font.find();
+    const fonts = await Font.find({ user: req.user });
     res.send({ fonts });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

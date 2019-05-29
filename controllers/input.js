@@ -24,7 +24,7 @@ const createInput = async (req, res, next) => {
 
 const getInputs = async (req, res, next) => {
   try {
-    const inputElements = await Input.find();
+    const inputElements = await Input.find({ user: req.user });
     res.send({ inputElements });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

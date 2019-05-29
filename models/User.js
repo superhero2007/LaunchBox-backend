@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: Date,
   confirmed: { type: Boolean, default: false },
   confirmationToken: String,
+  emailToken: String,
   token: { type: String, required: true },
 }, { timestamps: true });
 
@@ -64,6 +65,20 @@ userSchema.methods.setConfirmationToken = function setConfirmationToken() {
 
 userSchema.methods.generateConfirmationUrl = function generateConfirmationUrl() {
   return `${process.env.FRONTEND_URL}/confirmation/${this.confirmationToken}`;
+};
+
+userSchema.methods.setEmailToken = function setEmailToken(newEmail) {
+  const expireDate = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365 * 20);
+  this.emailToken = jwt.sign({
+    _id: this._id,
+    email: newEmail,
+    exp: expireDate,
+  },
+  process.env.SESSION_SECRET);
+};
+
+userSchema.methods.generateEmailUrl = function generateEmailUrl() {
+  return `${process.env.FRONTEND_URL}/email_confirmation/${this.emailToken}`;
 };
 
 userSchema.methods.generateResetPasswordLink = function generateResetPasswordLink() {

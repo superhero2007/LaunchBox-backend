@@ -27,7 +27,7 @@ const createIcon = async (req, res, next) => {
 
 const getIcons = async (req, res, next) => {
   try {
-    const icons = await Icon.find();
+    const icons = await Icon.find({ user: req.user });
     res.send({ icons });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

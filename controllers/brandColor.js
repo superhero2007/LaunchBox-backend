@@ -23,7 +23,7 @@ const createBrandColor = async (req, res, next) => {
 
 const getBrandColors = async (req, res, next) => {
   try {
-    const brandColors = await BrandColor.find();
+    const brandColors = await BrandColor.find({ user: req.user });
     res.send({ brandColors });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

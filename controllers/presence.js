@@ -23,7 +23,7 @@ const createPresence = async (req, res, next) => {
 
 const getPresences = async (req, res, next) => {
   try {
-    const presences = await Presence.find();
+    const presences = await Presence.find({ user: req.user });
     res.send({ presences });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

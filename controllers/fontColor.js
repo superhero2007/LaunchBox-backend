@@ -23,7 +23,7 @@ const createFontColor = async (req, res, next) => {
 
 const getFontColors = async (req, res, next) => {
   try {
-    const fontColors = await FontColor.find();
+    const fontColors = await FontColor.find({ user: req.user });
     res.send({ fontColors });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

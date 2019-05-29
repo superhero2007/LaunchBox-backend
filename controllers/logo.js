@@ -26,7 +26,7 @@ const createLogo = async (req, res, next) => {
 
 const getLogos = async (req, res, next) => {
   try {
-    const logos = await Logo.find();
+    const logos = await Logo.find({ user: req.user });
     res.send({ logos });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
