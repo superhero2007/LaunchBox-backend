@@ -153,5 +153,13 @@ router.get('/confirmation/:token', confirmToken);
 router.post('/confirmation', confirmation);
 router.post('/reset_password', resetPassword);
 router.post('/reset_password_request', resetPasswordRequest);
+router.get('/twitter', passport.authenticate('twitter'));
+router.get('/twitter/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res) => {
+  res.redirect(req.session.returnTo || '/');
+});
+router.get('/google', passport.authenticate('google', { scope: 'profile email' }));
+router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), (req, res) => {
+  res.redirect(req.session.returnTo || '/');
+});
 
 module.exports = router;

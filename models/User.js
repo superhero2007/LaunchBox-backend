@@ -15,6 +15,20 @@ const userSchema = new mongoose.Schema({
   confirmationToken: String,
   emailToken: String,
   token: { type: String, required: true },
+  twitter: {
+    name: String,
+    gender: String,
+    location: String,
+    website: String,
+    picture: String
+  },
+  google: {
+    name: String,
+    gender: String,
+    location: String,
+    website: String,
+    picture: String
+  }
 }, { timestamps: true });
 
 /**
