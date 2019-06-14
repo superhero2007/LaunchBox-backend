@@ -15,19 +15,28 @@ const userSchema = new mongoose.Schema({
   confirmationToken: String,
   emailToken: String,
   token: { type: String, required: true },
-  twitter: {
-    name: String,
-    gender: String,
-    location: String,
-    website: String,
-    picture: String
+  creditCard: {
+    cardNumber: String,
+    holderName: String,
+    expiry: String,
+    cvc: String,
   },
-  google: {
-    name: String,
-    gender: String,
-    location: String,
-    website: String,
-    picture: String
+  paypal: {
+    email: String,
+    firstName: String,
+    lastName: String,
+  },
+  nummus: {
+    id: String,
+    token: String,
+  },
+  subscription: {
+    amount: Number,
+    method: Boolean,
+    users: Number,
+    brands: Number,
+    status: Number,
+    date: Date,
   }
 }, { timestamps: true });
 
@@ -126,10 +135,16 @@ userSchema.methods.generateResetPasswordToken = function generateResetPasswordTo
 
 userSchema.methods.toAuthJSON = function toAuthJSON() {
   return {
+    _id: this._id,
     email: this.email,
     companyName: this.companyName,
     fullName: this.fullName,
     confirmed: this.confirmed,
+    photo: this.photo,
+    creditCard: this.creditCard,
+    paypal: this.paypal,
+    nummus: this.nummus,
+    subscription: this.subscription,
     token: this.token
   };
 };

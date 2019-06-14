@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const express = require('express');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
@@ -20,16 +21,7 @@ const login = async (req, res, next) => {
     } catch (error) {
       res.status(400).json({ errors: error.errors });
     }
-    res.json({
-      user: {
-        _id: user._id,
-        email: user.email,
-        fullName: user.fullName,
-        companyName: user.companyName,
-        confirmed: user.confirmed,
-        token: user.token
-      }
-    });
+    res.send({ user: user.toAuthJSON() });
   })(req, res, next);
 };
 
@@ -53,16 +45,7 @@ const register = async (req, res, next) => {
     res.status(400).json({ errors: error.errors });
   }
   sendConfirmationEmail(user);
-  res.json({
-    user: {
-      _id: user._id,
-      email: user.email,
-      fullName: user.fullName,
-      companyName: user.companyName,
-      confirmed: user.confirmed,
-      token: user.token
-    }
-  });
+  res.send({ user: user.toAuthJSON() });
 };
 
 const registerConfirmation = (req, res, next) => {
@@ -153,13 +136,13 @@ router.get('/confirmation/:token', confirmToken);
 router.post('/confirmation', confirmation);
 router.post('/reset_password', resetPassword);
 router.post('/reset_password_request', resetPasswordRequest);
-router.get('/twitter', passport.authenticate('twitter'));
-router.get('/twitter/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res) => {
-  res.redirect(req.session.returnTo || '/');
-});
-router.get('/google', passport.authenticate('google', { scope: 'profile email' }));
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), (req, res) => {
-  res.redirect(req.session.returnTo || '/');
-});
+// router.get('/twitter', passport.authenticate('twitter'));
+// router.get('/twitter/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res) => {
+//   res.redirect(req.session.returnTo || '/');
+// });
+// router.get('/google', passport.authenticate('google', { scope: 'profile email' }));
+// router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), (req, res) => {
+//   res.redirect(req.session.returnTo || '/');
+// });
 
 module.exports = router;
