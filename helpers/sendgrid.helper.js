@@ -47,8 +47,23 @@ const sendChangeEmail = (user) => {
   sgMail.send(msg);
 };
 
+const sendInvitationEmail = (company, email, fullName) => {
+  const msg = {
+    to: email,
+    from: 'support@brandguide.app',
+    from_name: 'BrandGuide',
+    templateId: 'd-69270acbe65f49608157a571b10bb046',
+    dynamic_template_data: {
+      fullName,
+      verify_link: company.generateInvitationUrl(email)
+    },
+  };
+  sgMail.send(msg);
+};
+
 module.exports = {
   sendConfirmationEmail,
   sendResetPasswordEmail,
-  sendChangeEmail
+  sendChangeEmail,
+  sendInvitationEmail
 };

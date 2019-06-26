@@ -8,7 +8,7 @@ const router = express.Router();
 
 const createBrandColor = async (req, res, next) => {
   const brandColor = new BrandColor({
-    user: req.user,
+    company: req.user.company,
     value: req.body.value
   });
 
@@ -23,7 +23,7 @@ const createBrandColor = async (req, res, next) => {
 
 const getBrandColors = async (req, res, next) => {
   try {
-    const brandColors = await BrandColor.find({ user: req.user });
+    const brandColors = await BrandColor.find({ company: req.user.company });
     res.send({ brandColors });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

@@ -11,7 +11,7 @@ const router = express.Router();
 
 const createLogo = async (req, res, next) => {
   const logo = new Logo({
-    user: req.user,
+    company: req.user.company,
     value: `/uploads/${req.file.filename}`
   });
 
@@ -26,7 +26,7 @@ const createLogo = async (req, res, next) => {
 
 const getLogos = async (req, res, next) => {
   try {
-    const logos = await Logo.find({ user: req.user });
+    const logos = await Logo.find({ company: req.user.company });
     res.send({ logos });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

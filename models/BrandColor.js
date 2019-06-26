@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const brandColorSchema = new mongoose.Schema({
-  user: {
+  company: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Company'
   },
   value: {
     type: String,

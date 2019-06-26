@@ -8,7 +8,7 @@ const router = express.Router();
 
 const createFontColor = async (req, res, next) => {
   const fontColor = new FontColor({
-    user: req.user,
+    company: req.user.company,
     value: req.body.value
   });
 
@@ -23,7 +23,7 @@ const createFontColor = async (req, res, next) => {
 
 const getFontColors = async (req, res, next) => {
   try {
-    const fontColors = await FontColor.find({ user: req.user });
+    const fontColors = await FontColor.find({ company: req.user.company });
     res.send({ fontColors });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

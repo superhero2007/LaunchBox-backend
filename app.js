@@ -21,13 +21,16 @@ dotenv.config({ path: '.env' });
  */
 const authController = require('./controllers/auth');
 const userController = require('./controllers/user');
-const inputController = require('./controllers/input');
+const companyController = require('./controllers/company');
+const brandController = require('./controllers/brand');
 const presenceController = require('./controllers/presence');
 const logoController = require('./controllers/logo');
 const fontController = require('./controllers/font');
 const fontColorController = require('./controllers/fontColor');
 const brandColorController = require('./controllers/brandColor');
 const iconController = require('./controllers/icon');
+const invitationController = require('./controllers/invitation');
+const memberController = require('./controllers/member');
 
 /**
  * Create Express server.
@@ -80,13 +83,16 @@ app.use(passport.session());
  */
 app.use('/api/auth', authController);
 app.use('/api/user', userController);
-app.use('/api/input', inputController);
+app.use('/api/company', companyController);
+app.use('/api/brand', brandController);
 app.use('/api/presence', presenceController);
 app.use('/api/logo', logoController);
 app.use('/api/font', fontController);
 app.use('/api/font-color', fontColorController);
 app.use('/api/brand-color', brandColorController);
 app.use('/api/icon', iconController);
+app.use('/api/invitation', invitationController);
+app.use('/api/member', memberController);
 
 /**
  * Start Express server.

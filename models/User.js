@@ -15,29 +15,11 @@ const userSchema = new mongoose.Schema({
   confirmationToken: String,
   emailToken: String,
   token: { type: String, required: true },
-  creditCard: {
-    cardNumber: String,
-    holderName: String,
-    expiry: String,
-    cvc: String,
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company'
   },
-  paypal: {
-    email: String,
-    firstName: String,
-    lastName: String,
-  },
-  nummus: {
-    id: String,
-    token: String,
-  },
-  subscription: {
-    amount: Number,
-    method: Boolean,
-    users: Number,
-    brands: Number,
-    status: Number,
-    date: Date,
-  }
+  role: { type: String, required: true }
 }, { timestamps: true });
 
 /**
@@ -141,11 +123,9 @@ userSchema.methods.toAuthJSON = function toAuthJSON() {
     fullName: this.fullName,
     confirmed: this.confirmed,
     photo: this.photo,
-    creditCard: this.creditCard,
-    paypal: this.paypal,
-    nummus: this.nummus,
-    subscription: this.subscription,
-    token: this.token
+    token: this.token,
+    company: this.company,
+    role: this.role
   };
 };
 

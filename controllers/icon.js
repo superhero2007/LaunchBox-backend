@@ -13,7 +13,7 @@ const createIcon = async (req, res, next) => {
   try {
     const icons = req.files.map(file => (
       {
-        user: req.user,
+        company: req.user.company,
         value: `/uploads/${file.filename}`
       }
     ));
@@ -27,7 +27,7 @@ const createIcon = async (req, res, next) => {
 
 const getIcons = async (req, res, next) => {
   try {
-    const icons = await Icon.find({ user: req.user });
+    const icons = await Icon.find({ company: req.user.company });
     res.send({ icons });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

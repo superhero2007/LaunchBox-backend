@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 const User = require('../models/User');
+const Company = require('../models/Company');
+const Invitation = require('../models/Invitation');
 const { sendResetPasswordEmail, sendConfirmationEmail } = require('../helpers/sendgrid.helper');
 
 const login = async (req, res, next) => {
@@ -25,30 +27,51 @@ const login = async (req, res, next) => {
   })(req, res, next);
 };
 
-const register = async (req, res, next) => {
+const register = async (req, res) => {
   const {
     email, password, fullName, companyName
   } = req.body;
-
-  const user = new User({
-    email,
-    password,
-    fullName,
-    companyName
-  });
-
-  user.setConfirmationToken();
-  user.setToken();
   try {
+    const invitation = await Invitation.findOne({ value: email.toLowerCase() });
+    let role = 'Admin';
+    if (invitation) {
+      invitation.remove();
+      role = 'Member';
+    }
+
+    const user = new User({
+      email,
+      password,
+      fullName,
+      companyName,
+      role
+    });
+
+    user.setConfirmationToken();
+    user.setToken();
+
+    const company = await Company.findOneAndUpdate({
+      name: companyName
+    },
+    {
+      name: companyName,
+      method: ''
+    }, {
+      new: true,
+      upsert: true
+    });
+    user.company = company;
     await user.save();
+
+    sendConfirmationEmail(user);
+    res.send({ user: user.toAuthJSON() });
   } catch (error) {
+    console.log(error);
     res.status(400).json({ errors: error.errors });
   }
-  sendConfirmationEmail(user);
-  res.send({ user: user.toAuthJSON() });
 };
 
-const registerConfirmation = (req, res, next) => {
+const registerConfirmation = (req, res) => {
   const { token } = req.body;
   jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
     if (err) {

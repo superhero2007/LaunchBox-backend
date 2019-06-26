@@ -8,8 +8,9 @@ const router = express.Router();
 
 const createPresence = async (req, res, next) => {
   const presence = new Presence({
-    user: req.user,
-    value: req.body.value
+    company: req.user.company,
+    value: req.body.value,
+    type: req.body.type,
   });
 
   try {
@@ -23,7 +24,7 @@ const createPresence = async (req, res, next) => {
 
 const getPresences = async (req, res, next) => {
   try {
-    const presences = await Presence.find({ user: req.user });
+    const presences = await Presence.find({ company: req.user.company });
     res.send({ presences });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

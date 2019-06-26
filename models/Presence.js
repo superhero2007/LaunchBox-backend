@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 
 const presenceSchema = new mongoose.Schema({
-  user: {
+  company: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Company'
   },
   value: {
     type: String,
     required: true
   },
+  type: Number,
 }, { timestamps: true });
 
 const Presence = mongoose.model('Presence', presenceSchema);

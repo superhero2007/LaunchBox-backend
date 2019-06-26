@@ -12,33 +12,31 @@ const BrandColor = require('../models/BrandColor');
 const Font = require('../models/Font');
 const FontColor = require('../models/FontColor');
 const Icon = require('../models/Icon');
-const Input = require('../models/Input');
+const Brand = require('../models/Brand');
 const Logo = require('../models/Logo');
 const Presence = require('../models/Presence');
 
 const { sendChangeEmail } = require('../helpers/sendgrid.helper');
-const nummus = require('../helpers/nummuspay.helper');
 
-const getUser = async (req, res, next) => {
+const getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    const subscriptionDate = new Date(user.subscription.date);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - subscriptionDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // const subscriptionDate = new Date(user.subscription.date);
+    // const now = new Date();
+    // const diffTime = Math.abs(now.getTime() - subscriptionDate.getTime());
+    // const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    //
+    // if (user.subscription.status === 0 && diffDays > 8) {
+    //   user.subscription.status = 1;
+    //   await user.save();
+    // }
 
-    if (user.subscription.status === 0 && diffDays > 8) {
-      user.subscription.status = 1;
-      await user.save();
-    }
-
-    res.send({ user: user.toAuthJSON() });
+    res.send({ user: req.user.toAuthJSON() });
   } catch (error) {
     res.status(404).json({ errors: { global: 'Invalid token' } });
   }
 };
 
-const updateUser = async (req, res, next) => {
+const updateUser = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(req.user._id,
       { $set: req.body },
@@ -51,9 +49,9 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-const updateEmail = async (req, res, next) => {
+const updateEmail = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     user.comparePassword(req.body.password, async (error, isMatch) => {
       if (error) { return res.status(400).json({ errors: error.errors }); }
       if (isMatch) {
@@ -70,7 +68,7 @@ const updateEmail = async (req, res, next) => {
   }
 };
 
-const updateEmailConfirm = async (req, res, next) => {
+const updateEmailConfirm = async (req, res) => {
   const { token } = req.body;
   console.log('[email confirmation]', token);
 
@@ -84,12 +82,6 @@ const updateEmailConfirm = async (req, res, next) => {
       const newEmail = jwt.verify(token, process.env.SESSION_SECRET).email;
       user.email = newEmail;
       user.emailToken = '';
-      user.subscription.status = 0;
-      user.subscription.date = new Date();
-      user.subscription.amount = 0;
-      user.subscription.method = false;
-      user.subscription.users = 0;
-      user.subscription.brands = 0;
       user.setToken();
       await user.save();
       return res.send({ user: user.toAuthJSON() });
@@ -99,9 +91,9 @@ const updateEmailConfirm = async (req, res, next) => {
   }
 };
 
-const updatePassword = async (req, res, next) => {
+const updatePassword = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     user.comparePassword(req.body.oldPassword, async (error, isMatch) => {
       if (error) { return res.status(400).json({ errors: error.errors }); }
       if (isMatch) {
@@ -117,7 +109,7 @@ const updatePassword = async (req, res, next) => {
   }
 };
 
-const deleteUser = async (req, res, next) => {
+const deleteUser = async (req, res) => {
   try {
     await User.findByIdAndRemove(req.user._id);
     res.send({});
@@ -126,22 +118,29 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-const clearUser = async (req, res, next) => {
+const clearUser = async (req, res) => {
   try {
-    await BrandColor.deleteMany({ user: req.user });
-    await Font.deleteMany({ user: req.user });
-    await FontColor.deleteMany({ user: req.user });
-    await Icon.deleteMany({ user: req.user });
-    await Input.deleteMany({ user: req.user });
-    await Logo.deleteMany({ user: req.user });
-    await Presence.deleteMany({ user: req.user });
+    // Delete Normal User Assets
+    await BrandColor.deleteMany({ company: req.company });
+    await Font.deleteMany({ company: req.company });
+    await FontColor.deleteMany({ company: req.company });
+    await Icon.deleteMany({ company: req.company });
+    await Logo.deleteMany({ company: req.company });
+    await Presence.deleteMany({ company: req.company });
+    await Brand.deleteMany({ company: req.company, role: 'Public' });
+
+    // Delete Admin User Assets
+    const { user } = req;
+    if (user.role === 'Admin') {
+      await Brand.deleteMany({ company: req.company, role: 'Private' });
+    }
     res.send({});
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
-const uploadPhoto = async (req, res, next) => {
+const uploadPhoto = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(req.user._id,
       { $set: { photo: `/uploads/${req.file.filename}` } },
@@ -153,7 +152,7 @@ const uploadPhoto = async (req, res, next) => {
   }
 };
 
-const deletePhoto = async (req, res, next) => {
+const deletePhoto = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(req.user._id,
       { $set: { photo: '' } },
@@ -162,41 +161,6 @@ const deletePhoto = async (req, res, next) => {
     res.send({ user: user.toAuthJSON() });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
-  }
-};
-
-const subscribe = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
-    if (!(user.paypal && user.paypal.email) && !(user.creditCard && user.creditCard.cardNumber)) {
-      res.status(400).json({ errors: { global: 'Invalid Payment Method' } });
-    }
-    const productsResult = await nummus.getCompanyProducts();
-    const companyProducts = productsResult.$values;
-    if (!companyProducts.length) {
-      res.status(400).json({ errors: { global: 'No Subscription' } });
-    }
-    const data = {
-      PaymentToken: req.body.paymentToken,
-      Amount: req.body.amount,
-      tax: companyProducts[0].Tax,
-      Currency: 'USD',
-      ProductTitle: companyProducts[0].Title,
-      ProductDescription: companyProducts[0].Description
-    };
-    await nummus.charge(data);
-    user.subscription = {
-      amount: req.body.amount,
-      method: req.body.method,
-      users: req.body.users,
-      brands: req.body.brands,
-      status: 2,
-      date: new Date(),
-    };
-    await user.save();
-    return res.send({ user: user.toAuthJSON() });
-  } catch (error) {
-    return res.status(400).json({ errors: error.errors });
   }
 };
 
@@ -211,7 +175,5 @@ router.delete('/', passportConfig.authorize(), deleteUser);
 
 router.post('/photo', upload.single('file'), passportConfig.authorize(), uploadPhoto);
 router.delete('/photo', passportConfig.authorize(), deletePhoto);
-
-router.post('/subscribe', passportConfig.authorize(), subscribe);
 
 module.exports = router;

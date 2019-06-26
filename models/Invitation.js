@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const iconSchema = new mongoose.Schema({
+const invitationSchema = new mongoose.Schema({
   company: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company'
@@ -11,6 +11,6 @@ const iconSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-const Icon = mongoose.model('Icon', iconSchema);
+const Invitation = mongoose.model('Invitation', invitationSchema);
 
-module.exports = Icon;
+module.exports = Invitation;
