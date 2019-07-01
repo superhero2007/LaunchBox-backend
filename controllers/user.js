@@ -32,7 +32,7 @@ const getUser = async (req, res) => {
 
     res.send({ user: req.user.toAuthJSON() });
   } catch (error) {
-    res.status(404).json({ errors: { global: 'Invalid token' } });
+    res.status(404).json({ errors: { global: { message: 'Invalid token' } } });
   }
 };
 
@@ -61,7 +61,7 @@ const updateEmail = async (req, res) => {
         sendChangeEmail(user);
         return res.send({ user: user.toAuthJSON() });
       }
-      return res.status(400).json({ errors: { global: { msg: 'Invalid email or password.' } } });
+      return res.status(400).json({ errors: { global: { message: 'Invalid email or password.' } } });
     });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
@@ -77,7 +77,7 @@ const updateEmailConfirm = async (req, res) => {
       if (!user) {
         return res
           .status(400)
-          .json({ errors: { global: 'This email token does not exist' } });
+          .json({ errors: { global: { message: 'This email token does not exist' } } });
       }
       const newEmail = jwt.verify(token, process.env.SESSION_SECRET).email;
       user.email = newEmail;
@@ -102,7 +102,7 @@ const updatePassword = async (req, res) => {
         await user.save();
         res.send({ user: user.toAuthJSON() });
       }
-      return res.status(400).json({ errors: { global: { msg: 'Invalid email or password.' } } });
+      return res.status(400).json({ errors: { global: { message: 'Invalid email or password.' } } });
     });
   } catch (error) {
     res.status(400).json({ errors: error.errors });

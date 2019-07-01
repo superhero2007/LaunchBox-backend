@@ -12,14 +12,14 @@ const subscribe = async (req, res) => {
     const { company } = req.user;
 
     if (!company.method) {
-      res.status(400).json({ errors: { global: 'Invalid Payment Method' } });
+      res.status(400).json({ errors: { global: { message: 'Invalid Payment Method' } } });
     }
 
     const productsResult = await nummus.getCompanyProducts();
     const companyProducts = productsResult.$values;
 
     if (!companyProducts.length) {
-      res.status(400).json({ errors: { global: 'No Subscription' } });
+      res.status(400).json({ errors: { global: { message: 'No Subscription' } } });
     }
 
     const data = {

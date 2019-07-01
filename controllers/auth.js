@@ -14,7 +14,7 @@ const login = async (req, res, next) => {
   passport.authenticate('local', async (err, user, info) => {
     if (err) { return next(err); }
     if (!user) {
-      return res.status(401).json({ errors: { global: info.msg } });
+      return res.status(401).json({ errors: { global: { message: info.msg } } });
     }
 
     user.setToken();
@@ -75,14 +75,14 @@ const registerConfirmation = (req, res) => {
   const { token } = req.body;
   jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
     if (err) {
-      res.status(401).json({ errors: { global: 'Invalid token' } });
+      res.status(401).json({ errors: { global: { message: 'Invalid token' } } });
     } else {
       User.findOne({ _id: decoded._id }).then((user) => {
         if (user) {
           sendConfirmationEmail(user);
           res.json({ user: user.toAuthJSON() });
         } else {
-          res.status(404).json({ errors: { global: 'Invalid token' } });
+          res.status(404).json({ errors: { global:{ message: 'Invalid token' } } });
         }
       });
     }
@@ -124,7 +124,7 @@ const resetPasswordRequest = (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ errors: { global: 'This email does not exist' } });
+        .json({ errors: { global: { message: 'This email does not exist' } } });
     }
     sendResetPasswordEmail(user);
     return res.json({});
@@ -140,7 +140,7 @@ const resetPassword = (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ errors: { global: 'This email does not exist' } });
+        .json({ errors: { global: { message: 'This email does not exist' } } });
     }
     user.password = newPassword;
     try {
