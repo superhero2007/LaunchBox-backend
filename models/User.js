@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
   confirmed: { type: Boolean, default: false },
   confirmationToken: String,
   emailToken: String,
-  token: { type: String, required: true },
+  token: String,
   company: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company'

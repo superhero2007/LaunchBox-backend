@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
+const passportConfig = require('../config/passport');
 const User = require('../models/User');
 const Company = require('../models/Company');
 const Invitation = require('../models/Invitation');
@@ -25,6 +26,18 @@ const login = async (req, res, next) => {
     }
     res.send({ user: user.toAuthJSON() });
   })(req, res, next);
+};
+
+const logout = async (req, res, next) => {
+  try {
+    const { user } = req;
+    user.token = '';
+    await user.save();
+
+    res.send({ user: user.toAuthJSON() });
+  } catch (error) {
+    res.status(404).json({ errors: { global: { message: 'Invalid token' } } });
+  }
 };
 
 const register = async (req, res) => {
@@ -82,7 +95,7 @@ const registerConfirmation = (req, res) => {
           sendConfirmationEmail(user);
           res.json({ user: user.toAuthJSON() });
         } else {
-          res.status(404).json({ errors: { global:{ message: 'Invalid token' } } });
+          res.status(404).json({ errors: { global: { message: 'Invalid token' } } });
         }
       });
     }
@@ -153,6 +166,7 @@ const resetPassword = (req, res) => {
 };
 
 router.post('/login', login);
+router.post('/logout', passportConfig.authorize(), logout);
 router.post('/register', register);
 router.post('/register-confirmation', registerConfirmation);
 router.get('/confirmation/:token', confirmToken);
