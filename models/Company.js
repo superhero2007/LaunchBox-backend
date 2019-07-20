@@ -13,10 +13,6 @@ const companySchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
   },
-  nummus: {
-    id: String,
-    token: String,
-  },
   subscription: {
     amount: Number,
     method: Boolean,
@@ -25,7 +21,7 @@ const companySchema = new mongoose.Schema({
     status: Number,
     date: Date,
   },
-  method: { type: String, required: true }
+  method: { type: String }
 }, { timestamps: true });
 
 companySchema.methods.generateInvitationUrl = function generateInvitationUrl(email) {

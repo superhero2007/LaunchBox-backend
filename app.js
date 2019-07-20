@@ -31,6 +31,7 @@ const brandColorController = require('./controllers/brandColor');
 const iconController = require('./controllers/icon');
 const invitationController = require('./controllers/invitation');
 const memberController = require('./controllers/member');
+const subscriptionController = require('./controllers/subscription');
 
 /**
  * Create Express server.
@@ -93,6 +94,7 @@ app.use('/api/brand-color', brandColorController);
 app.use('/api/icon', iconController);
 app.use('/api/invitation', invitationController);
 app.use('/api/member', memberController);
+app.use('/api/subscription', subscriptionController);
 
 /**
  * Start Express server.

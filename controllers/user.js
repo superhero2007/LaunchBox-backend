@@ -8,6 +8,7 @@ const passportConfig = require('../config/passport');
 const router = express.Router();
 
 const User = require('../models/User');
+const Company = require('../models/Company');
 const BrandColor = require('../models/BrandColor');
 const Font = require('../models/Font');
 const FontColor = require('../models/FontColor');
@@ -30,9 +31,10 @@ const getUser = async (req, res) => {
     //   await user.save();
     // }
 
-    res.send({ user: req.user.toAuthJSON() });
+    const company = await Company.findOne({ _id: req.user.company });
+    res.send({ user: req.user.toAuthJSON(), company });
   } catch (error) {
-    res.status(404).json({ errors: { global: { message: 'Invalid token' } } });
+    res.status(404).json({ errors: { global: { message: 'Invalid User' } } });
   }
 };
 

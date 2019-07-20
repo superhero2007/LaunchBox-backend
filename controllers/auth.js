@@ -10,6 +10,7 @@ const User = require('../models/User');
 const Company = require('../models/Company');
 const Invitation = require('../models/Invitation');
 const { sendResetPasswordEmail, sendConfirmationEmail } = require('../helpers/sendgrid.helper');
+const recurly = require('../helpers/recurly.helper');
 
 const login = async (req, res, next) => {
   passport.authenticate('local', async (err, user, info) => {
@@ -24,7 +25,8 @@ const login = async (req, res, next) => {
     } catch (error) {
       res.status(400).json({ errors: error.errors });
     }
-    res.send({ user: user.toAuthJSON() });
+    const company = await Company.findOne({ _id: user.company });
+    res.send({ user: user.toAuthJSON(), company });
   })(req, res, next);
 };
 
@@ -42,16 +44,33 @@ const logout = async (req, res, next) => {
 
 const register = async (req, res) => {
   const {
-    email, password, fullName, companyName
+    email, password, fullName
   } = req.body;
+  let { companyName } = req.body;
   try {
+    let role;
+    let company;
+
+    // Check Invitation Model to check if this is invited user or admin user.
     const invitation = await Invitation.findOne({ value: email.toLowerCase() });
-    let role = 'Admin';
+
+    // Create / Get Company & Set role
     if (invitation) {
+      company = await Company.findOne({ _id: invitation.company });
+      companyName = company.name;
       invitation.remove();
       role = 'Member';
+    } else {
+      // Auto-Create Subscription Free Trial (method = '')
+      company = new Company({
+        name: companyName,
+        method: '',
+      });
+      await company.save();
+      role = 'Admin';
     }
 
+    // Create User
     const user = new User({
       email,
       password,
@@ -62,21 +81,27 @@ const register = async (req, res) => {
 
     user.setConfirmationToken();
     user.setToken();
-
-    const company = await Company.findOneAndUpdate({
-      name: companyName
-    },
-    {
-      name: companyName,
-      method: ''
-    }, {
-      new: true,
-      upsert: true
-    });
     user.company = company;
     await user.save();
-
     sendConfirmationEmail(user);
+
+    // Create Account of Recurly
+    const accountCode = `${company._id}`;
+    const account = await recurly.fetchAccount(accountCode);
+    if (!account) {
+      const accountData = {
+        account: {
+          account_code: accountCode,
+          email,
+          first_name: fullName.split(' ').slice(0, -1).join(' '),
+          last_name: fullName.split(' ').slice(-1).join(' '),
+          username: fullName,
+          company_name: companyName
+        }
+      };
+      await recurly.createAccount(accountData);
+    }
+
     res.send({ user: user.toAuthJSON() });
   } catch (error) {
     console.log(error);
