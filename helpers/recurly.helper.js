@@ -467,9 +467,9 @@ const createSubscription = async (subscription) => {
     }
     return null;
   } catch (error) {
-    const result = xmlToObj(error.response.data).error;
-    console.log('[Create Subscription Error:] ', result.description[0]._);
-    throw new Error(result.description[0]._);
+    const result = xmlToObj(error.response.data).errors;
+    console.log('[Create Subscription Error:] ', result.error[0]._);
+    throw new Error(result.error[0]._);
   }
 };
 
@@ -486,9 +486,9 @@ const updateSubscription = async (subscription, uuid) => {
     }
     return null;
   } catch (error) {
-    const result = xmlToObj(error.response.data).error;
-    console.log('[Update Subscription Error:] ', result.description[0]._);
-    throw new Error(result.description[0]._);
+    const result = xmlToObj(error.response.data).errors;
+    console.log('[Update Subscription Error:] ', result.error[0]._);
+    throw new Error(result.error[0]._);
   }
 };
 
@@ -560,6 +560,45 @@ const fetchInvoice = async (uuid) => {
   }
 };
 
+// Create Billing Info
+const createBillingInfo = async (accountCode, billingInfo) => {
+  try {
+    const builder = new Builder();
+    const data = builder.buildObject(billingInfo);
+    const res = await axios.post(`${ACCOUNT_END_POINT}/${accountCode}/billing_info`, data, DEFAULT_CONFIG);
+    if (res.status === 200) {
+      const result = xmlToObj(res.data).billing_info;
+      console.log('[Create Billing Info Success:] ', result);
+      return result;
+    }
+    return null;
+  } catch (error) {
+    const result = xmlToObj(error.response.data).errors;
+    console.log(result);
+    console.log('[Create Billing Info Error:] ', result.error[0]._);
+    throw new Error(result.error[0]._);
+  }
+};
+
+// Update Billing Info
+const updateBillingInfo = async (accountCode, billingInfo) => {
+  try {
+    const builder = new Builder();
+    const data = builder.buildObject(billingInfo);
+    const res = await axios.put(`${ACCOUNT_END_POINT}/${accountCode}/billing_info`, data, DEFAULT_CONFIG);
+    if (res.status === 200) {
+      const result = xmlToObj(res.data).billing_info;
+      console.log('[Update Billing Info Success:] ', result);
+      return result;
+    }
+    return null;
+  } catch (error) {
+    const result = xmlToObj(error.response.data).errors;
+    console.log(result);
+    console.log('[Update Billing Info Error:] ', result.error[0]._);
+    throw new Error(result.error[0]._);
+  }
+};
 
 module.exports = {
   listPlan,
@@ -591,5 +630,7 @@ module.exports = {
   cancelSubscription,
   listInvoice,
   listAccountInvoice,
-  fetchInvoice
+  fetchInvoice,
+  createBillingInfo,
+  updateBillingInfo
 };

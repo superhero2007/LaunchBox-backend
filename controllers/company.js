@@ -67,10 +67,53 @@ const updateCompany = async (req, res, next) => {
 };
 
 const addPayment = async (req, res, next) => {
+  const { paypal, creditCard, method } = req.body;
   try {
-    const company = await Company.findByIdAndUpdate(req.user.company,
-      { $set: req.body },
-      { new: true });
+    const company = await Company.findOne({ _id: req.user.company });
+    const accountCode = `${company._id}`;
+    let data;
+    if (method === 'Credit Card') {
+      const {
+        cardNumber, holderName, expiry, cvc
+      } = creditCard;
+      data = {
+        billing_info: {
+          first_name: holderName.split(' ').slice(0, -1).join(' '),
+          last_name: holderName.split(' ').slice(-1).join(' '),
+          number: cardNumber,
+          month: expiry.split('/')[1],
+          year: expiry.split('/')[0],
+          verification_value: cvc,
+          address1: 'address',
+          city: 'city',
+          state: 'state',
+          country: 'US',
+          zip: '12345'
+        }
+      };
+    } else {
+      const { firstName, lastName } = paypal;
+      data = {
+        billing_info: {
+          first_name: firstName,
+          last_name: lastName,
+          address1: 'address',
+          city: 'city',
+          state: 'state',
+          country: 'US',
+          zip: '12345'
+        }
+      };
+    }
+    const account = await recurly.fetchAccount(accountCode);
+    if (account) {
+      await recurly.createBillingInfo(accountCode, data);
+    }
+
+    company.paypal = paypal;
+    company.creditCard = creditCard;
+    company.method = method;
+    await company.save();
     res.send({ company });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
@@ -78,10 +121,54 @@ const addPayment = async (req, res, next) => {
 };
 
 const updatePayment = async (req, res, next) => {
+  const { paypal, creditCard, method } = req.body;
   try {
-    const company = await Company.findByIdAndUpdate(req.user.company,
-      { $set: req.body },
-      { new: true });
+    const company = await Company.findOne({ _id: req.user.company });
+    const accountCode = `${company._id}`;
+    let data;
+    if (method === 'Credit Card') {
+      const {
+        cardNumber, holderName, expiry, cvc
+      } = creditCard;
+      data = {
+        billing_info: {
+          first_name: holderName.split(' ').slice(0, -1).join(' '),
+          last_name: holderName.split(' ').slice(-1).join(' '),
+          number: cardNumber,
+          month: expiry.split('/')[1],
+          year: expiry.split('/')[0],
+          verification_value: cvc,
+          address1: 'address',
+          city: 'city',
+          state: 'state',
+          country: 'US',
+          zip: '12345'
+        }
+      };
+    } else {
+      const { firstName, lastName } = paypal;
+      data = {
+        billing_info: {
+          first_name: firstName,
+          last_name: lastName,
+          address1: 'address',
+          city: 'city',
+          state: 'state',
+          country: 'US',
+          zip: '12345'
+        }
+      };
+    }
+
+    const account = await recurly.fetchAccount(accountCode);
+    if (account) {
+      await recurly.updateBillingInfo(accountCode, data);
+    }
+
+    company.paypal = paypal;
+    company.creditCard = creditCard;
+    company.method = method;
+    await company.save();
     res.send({ company });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
@@ -89,7 +176,7 @@ const updatePayment = async (req, res, next) => {
 };
 
 const createSubscribe = async (req, res, next) => {
-  const { subscription } = req.body;
+  // const { subscription } = req.body;
   try {
     const company = await Company.findByIdAndUpdate(req.user.company,
       { $set: req.body },
@@ -121,20 +208,7 @@ const createSubscribe = async (req, res, next) => {
           }
         }
       };
-      if (company.method === 'Credit Card') {
-        data.subscription.account.billing_info = {
-          number: company.creditCard.cardNumber,
-          month: company.creditCard.expiry.split('/')[1],
-          year: company.creditCard.expiry.split('/')[0],
-          address1: '123 Main St',
-          city: 'San Francisco',
-          state: 'CA',
-          zip: '94105',
-          country: 'US'
-        };
-      }
-      const selectedSubscription = await recurly.createSubscription(data);
-      console.log(selectedSubscription);
+      await recurly.createSubscription(data);
     }
     res.send({ company });
   } catch (error) {
@@ -147,6 +221,35 @@ const updateSubscribe = async (req, res, next) => {
     const company = await Company.findByIdAndUpdate(req.user.company,
       { $set: req.body },
       { new: true });
+
+    const accountCode = `${company._id}`;
+    const account = await recurly.fetchAccount(accountCode);
+    if (account) {
+      const data = {
+        subscription: {
+          plan_code: 'monthly',
+          subscription_add_ons: {
+            subscription_add_on: [
+              {
+                add_on_code: 'monthly_user',
+                quantity: 1,
+                unit_amount_in_cents: 600
+              },
+              {
+                add_on_code: 'monthly_brand',
+                quantity: 1,
+                unit_amount_in_cents: 900
+              }
+            ]
+          }
+        }
+      };
+      const subscriptions = await recurly.listAccountSubscription(company._id);
+      if (!subscriptions.subscription || !subscriptions.subscription.length) {
+        return res.status(400).json({ errors: { global: { message: 'No Subscription' } } });
+      }
+      await recurly.updateSubscription(data, subscriptions.subscription[0].uuid[0]);
+    }
     res.send({ company });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
