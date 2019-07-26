@@ -15,9 +15,9 @@ const createBrand = async (req, res) => {
     value: req.body.value,
     site: req.body.site,
     logo: `/uploads/${req.files.logo[0].filename}`,
-    colors: req.body.colors,
-    fonts: req.files.fonts.map(font => `/uploads/${font.filename}`),
-    social: req.body.social.map(value => JSON.parse(value)),
+    colors: typeof req.body.colors === 'string' ? [req.body.colors] : req.body.colors,
+    fonts: req.files.fonts.map(font => ({ value: `/uploads/${font.filename}`, name: font.originalname })),
+    social: typeof req.body.social === 'string' ? [JSON.parse(req.body.social)] : req.body.social.map(value => JSON.parse(value)),
     role: 'Public'
   });
 

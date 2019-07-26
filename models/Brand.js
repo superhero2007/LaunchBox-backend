@@ -22,7 +22,12 @@ const brandSchema = new mongoose.Schema({
   ],
   fonts: [
     {
-      type: String,
+      value: {
+        type: String
+      },
+      name: {
+        type: String
+      }
     }
   ],
   social: [
