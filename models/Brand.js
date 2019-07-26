@@ -9,6 +9,33 @@ const brandSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  site: {
+    type: String,
+    required: true
+  },
+  logo: {
+    type: String,
+  },
+  colors: [
+    {
+      type: String,
+    }
+  ],
+  fonts: [
+    {
+      type: String,
+    }
+  ],
+  social: [
+    {
+      value: {
+        type: String
+      },
+      type: {
+        type: Number
+      }
+    }
+  ],
   role: String
 }, { timestamps: true });
 
