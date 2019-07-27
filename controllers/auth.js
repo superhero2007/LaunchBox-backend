@@ -3,7 +3,7 @@ const express = require('express');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const passportConfig = require('../config/passport');
 const User = require('../models/User');

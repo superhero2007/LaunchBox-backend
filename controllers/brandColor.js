@@ -2,19 +2,19 @@ const express = require('express');
 
 const passportConfig = require('../config/passport');
 
-const BrandColor = require('../models/BrandColor');
+const Brand = require('../models/Brand');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const createBrandColor = async (req, res, next) => {
-  const brandColor = new BrandColor({
-    company: req.user.company,
-    value: req.body.value
-  });
-
   try {
-    await brandColor.save();
-    res.send({ brandColor });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.colors.push({
+      value: req.body.value,
+      type: req.body.type,
+    });
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
@@ -23,8 +23,8 @@ const createBrandColor = async (req, res, next) => {
 
 const getBrandColors = async (req, res, next) => {
   try {
-    const brandColors = await BrandColor.find({ company: req.user.company });
-    res.send({ brandColors });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    res.send({ brandColors: brand.colors });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
@@ -33,10 +33,11 @@ const getBrandColors = async (req, res, next) => {
 
 const updateBrandColor = async (req, res, next) => {
   try {
-    const brandColor = await BrandColor.findByIdAndUpdate(req.params.id,
-      { $set: req.body },
-      { new: true });
-    res.send({ brandColor });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    const element = brand.colors.find(presence => presence._id === req.params.id);
+    element.value = req.body.value;
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
@@ -44,8 +45,10 @@ const updateBrandColor = async (req, res, next) => {
 
 const deleteBrandColor = async (req, res, next) => {
   try {
-    await BrandColor.findByIdAndRemove(req.params.id);
-    res.send({ _id: req.params.id });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.colors = brand.colors.filter(presence => presence._id.toString() !== req.params.id);
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }

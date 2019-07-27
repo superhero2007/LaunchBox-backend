@@ -12,12 +12,21 @@ const brandSchema = new mongoose.Schema({
   site: {
     type: String
   },
-  logo: {
-    type: String,
-  },
+  logo: [
+    {
+      value: {
+        type: String
+      },
+      name: {
+        type: String
+      }
+    }
+  ],
   colors: [
     {
-      type: String,
+      value: {
+        type: String
+      }
     }
   ],
   fonts: [
@@ -37,6 +46,16 @@ const brandSchema = new mongoose.Schema({
       },
       type: {
         type: Number
+      }
+    }
+  ],
+  icons: [
+    {
+      value: {
+        type: String
+      },
+      name: {
+        type: String
       }
     }
   ],

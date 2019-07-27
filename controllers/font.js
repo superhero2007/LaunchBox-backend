@@ -1,59 +1,69 @@
 const express = require('express');
+const multer = require('multer');
+
+const upload = multer({ dest: 'uploads/' });
 
 const passportConfig = require('../config/passport');
 
-const Font = require('../models/Font');
+const Brand = require('../models/Brand');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const createFont = async (req, res, next) => {
-  const font = new Font({
-    company: req.user.company,
-    value: req.body.value
-  });
-
+const createFont = async (req, res) => {
   try {
-    await font.save();
-    res.send({ font });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    const fonts = req.files.map(file => (
+      {
+        name: file.originalname,
+        value: `/uploads/${file.filename}`
+      }
+    ));
+    brand.fonts = brand.fonts.concat(fonts);
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 
-const getFonts = async (req, res, next) => {
+const getFonts = async (req, res) => {
   try {
-    const fonts = await Font.find({ company: req.user.company });
-    res.send({ fonts });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    res.send({ fonts: brand.fonts });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 
-const updateFont = async (req, res, next) => {
+const updateFont = async (req, res) => {
   try {
-    const font = await Font.findByIdAndUpdate(req.params.id,
-      { $set: req.body },
-      { new: true });
-    res.send({ font });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    const element = brand.fonts.find(font => font._id === req.params.id);
+    element.value = `/uploads/${req.file.filename}`;
+    element.name = req.file.originalname;
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
-const deleteFont = async (req, res, next) => {
+const deleteFont = async (req, res) => {
   try {
-    await Font.findByIdAndRemove(req.params.id);
-    res.send({ _id: req.params.id });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.fonts = brand.fonts.filter(font => font._id.toString() !== req.params.id);
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 router.get('/', passportConfig.authorize(), getFonts);
-router.post('/', passportConfig.authorize(), createFont);
-router.put('/:id', passportConfig.authorize(), updateFont);
+router.post('/', upload.array('value'), passportConfig.authorize(), createFont);
+router.put('/:id', upload.single('value'), passportConfig.authorize(), updateFont);
 router.delete('/:id', passportConfig.authorize(), deleteFont);
 
 module.exports = router;

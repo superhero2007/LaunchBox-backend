@@ -5,58 +5,62 @@ const upload = multer({ dest: 'uploads/' });
 
 const passportConfig = require('../config/passport');
 
-const Logo = require('../models/Logo');
+const Brand = require('../models/Brand');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const createLogo = async (req, res, next) => {
-  const logo = new Logo({
-    company: req.user.company,
-    value: `/uploads/${req.file.filename}`
-  });
-
+const createLogo = async (req, res) => {
   try {
-    await logo.save();
-    res.send({ logo });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.logo.push({
+      value: `/uploads/${req.file.filename}`,
+      name: req.file.originalname,
+    });
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 
-const getLogos = async (req, res, next) => {
+const getLogos = async (req, res) => {
   try {
-    const logos = await Logo.find({ company: req.user.company });
-    res.send({ logos });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    res.send({ logos: brand.logo });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 
-const updateLogo = async (req, res, next) => {
+const updateLogo = async (req, res) => {
   try {
-    const logo = await Logo.findByIdAndUpdate(req.params.id,
-      { $set: req.body },
-      { new: true });
-    res.send({ logo });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    const element = brand.logo.find(logo => logo._id === req.params.id);
+    element.value = `/uploads/${req.file.filename}`;
+    element.name = req.file.originalname;
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
-const deleteLogo = async (req, res, next) => {
+const deleteLogo = async (req, res) => {
   try {
-    await Logo.findByIdAndRemove(req.params.id);
-    res.send({ _id: req.params.id });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.logo = brand.logo.filter(logo => logo._id.toString() !== req.params.id);
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 router.get('/', passportConfig.authorize(), getLogos);
-router.post('/', upload.single('file'), passportConfig.authorize(), createLogo);
-router.put('/:id', passportConfig.authorize(), updateLogo);
+router.post('/', upload.single('value'), passportConfig.authorize(), createLogo);
+router.put('/:id', upload.single('value'), passportConfig.authorize(), updateLogo);
 router.delete('/:id', passportConfig.authorize(), deleteLogo);
 
 module.exports = router;

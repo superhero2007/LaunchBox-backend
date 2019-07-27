@@ -5,7 +5,7 @@ const passportConfig = require('../config/passport');
 const Invitation = require('../models/Invitation');
 const Company = require('../models/Company');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const { sendInvitationEmail } = require('../helpers/sendgrid.helper');
 

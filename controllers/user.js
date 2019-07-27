@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const upload = multer({ dest: 'uploads/' });
 const passportConfig = require('../config/passport');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const User = require('../models/User');
 const Company = require('../models/Company');

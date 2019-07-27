@@ -1,7 +1,7 @@
 const express = require('express');
 const passportConfig = require('../config/passport');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const Company = require('../models/Company');
 const recurly = require('../helpers/recurly.helper');

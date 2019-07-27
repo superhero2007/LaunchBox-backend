@@ -4,7 +4,7 @@ const passportConfig = require('../config/passport');
 
 const User = require('../models/User');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const getMembers = async (req, res) => {
   try {

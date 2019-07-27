@@ -86,12 +86,14 @@ app.use('/api/auth', authController);
 app.use('/api/user', userController);
 app.use('/api/company', companyController);
 app.use('/api/brand', brandController);
-app.use('/api/presence', presenceController);
-app.use('/api/logo', logoController);
-app.use('/api/font', fontController);
+
+app.use('/api/brand/:brandId/presence', presenceController);
+app.use('/api/brand/:brandId/logo', logoController);
+app.use('/api/brand/:brandId/font', fontController);
+app.use('/api/brand/:brandId/brand-color', brandColorController);
+app.use('/api/brand/:brandId/icon', iconController);
+
 app.use('/api/font-color', fontColorController);
-app.use('/api/brand-color', brandColorController);
-app.use('/api/icon', iconController);
 app.use('/api/invitation', invitationController);
 app.use('/api/member', memberController);
 app.use('/api/subscription', subscriptionController);

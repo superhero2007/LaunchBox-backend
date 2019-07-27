@@ -4,7 +4,7 @@ const passportConfig = require('../config/passport');
 
 const FontColor = require('../models/FontColor');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const createFontColor = async (req, res, next) => {
   const fontColor = new FontColor({

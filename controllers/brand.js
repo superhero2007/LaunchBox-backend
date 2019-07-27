@@ -7,15 +7,15 @@ const passportConfig = require('../config/passport');
 
 const Brand = require('../models/Brand');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const createBrand = async (req, res) => {
   const brand = new Brand({
     company: req.user.company,
     value: req.body.value,
     site: req.body.site,
-    logo: `/uploads/${req.files.logo[0].filename}`,
-    colors: typeof req.body.colors === 'string' ? [req.body.colors] : req.body.colors,
+    logo: [{ value: `/uploads/${req.files.logo[0].filename}`, name: req.files.logo[0].originalname }],
+    colors: (typeof req.body.colors === 'string' ? [req.body.colors] : req.body.colors).map(color => ({ value: color })),
     fonts: req.files.fonts.map(font => ({ value: `/uploads/${font.filename}`, name: font.originalname })),
     social: typeof req.body.social === 'string' ? [JSON.parse(req.body.social)] : req.body.social.map(value => JSON.parse(value)),
     role: 'Public'

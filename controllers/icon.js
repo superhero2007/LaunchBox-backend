@@ -5,58 +5,64 @@ const upload = multer({ dest: 'uploads/' });
 
 const passportConfig = require('../config/passport');
 
-const Icon = require('../models/Icon');
+const Brand = require('../models/Brand');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const createIcon = async (req, res, next) => {
+const createIcon = async (req, res) => {
   try {
+    const brand = await Brand.findOne({ _id: req.params.brandId });
     const icons = req.files.map(file => (
       {
-        company: req.user.company,
+        name: file.originalname,
         value: `/uploads/${file.filename}`
       }
     ));
-    await Icon.insertMany(icons);
-    res.send({ icons });
+    brand.icons = brand.icons.concat(icons);
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 
-const getIcons = async (req, res, next) => {
+const getIcons = async (req, res) => {
   try {
-    const icons = await Icon.find({ company: req.user.company });
-    res.send({ icons });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    res.send({ icons: brand.icons });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 
-const updateIcon = async (req, res, next) => {
+const updateIcon = async (req, res) => {
   try {
-    const icon = await Icon.findByIdAndUpdate(req.params.id,
-      { $set: req.body },
-      { new: true });
-    res.send({ icon });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    const element = brand.icons.find(icon => icon._id === req.params.id);
+    element.value = `/uploads/${req.file.filename}`;
+    element.name = req.file.originalname;
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
-const deleteIcon = async (req, res, next) => {
+const deleteIcon = async (req, res) => {
   try {
-    await Icon.findByIdAndRemove(req.params.id);
-    res.send({ _id: req.params.id });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.icons = brand.icons.filter(font => font._id.toString() !== req.params.id);
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 router.get('/', passportConfig.authorize(), getIcons);
-router.post('/', upload.array('file', 12), passportConfig.authorize(), createIcon);
+router.post('/', upload.array('value', 12), passportConfig.authorize(), createIcon);
 router.put('/:id', passportConfig.authorize(), updateIcon);
 router.delete('/:id', passportConfig.authorize(), deleteIcon);
 

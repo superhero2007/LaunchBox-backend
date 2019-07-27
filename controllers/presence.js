@@ -2,51 +2,53 @@ const express = require('express');
 
 const passportConfig = require('../config/passport');
 
-const Presence = require('../models/Presence');
+const Brand = require('../models/Brand');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const createPresence = async (req, res, next) => {
-  const presence = new Presence({
-    company: req.user.company,
-    value: req.body.value,
-    type: req.body.type,
-  });
-
+const createPresence = async (req, res) => {
   try {
-    await presence.save();
-    res.send({ presence });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.social.push({
+      value: req.body.value,
+      type: req.body.type,
+    });
+    await brand.save();
+    res.send({ brand });
+  } catch (error) {
+    res.status(400).json({ errors: error.errors });
+  }
+};
+
+const getPresences = async (req, res) => {
+  try {
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    res.send({ presences: brand.social });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
 
-const getPresences = async (req, res, next) => {
+const updatePresence = async (req, res) => {
   try {
-    const presences = await Presence.find({ company: req.user.company });
-    res.send({ presences });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    const presence = brand.social.find(presence => presence._id === req.params.id);
+    presence.type = req.body.type;
+    presence.value = req.body.value;
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
 };
 
-
-const updatePresence = async (req, res, next) => {
+const deletePresence = async (req, res) => {
   try {
-    const presence = await Presence.findByIdAndUpdate(req.params.id,
-      { $set: req.body },
-      { new: true });
-    res.send({ presence });
-  } catch (error) {
-    res.status(400).json({ errors: error.errors });
-  }
-};
-
-const deletePresence = async (req, res, next) => {
-  try {
-    await Presence.findByIdAndRemove(req.params.id);
-    res.send({ _id: req.params.id });
+    const brand = await Brand.findOne({ _id: req.params.brandId });
+    brand.social = brand.social.filter(presence => presence._id.toString() !== req.params.id);
+    await brand.save();
+    res.send({ brand });
   } catch (error) {
     res.status(400).json({ errors: error.errors });
   }
